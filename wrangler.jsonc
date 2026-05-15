@@ -1,0 +1,49 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "my-app",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-14",
+  "vars": {
+    // 512 bits  length jwt heheh
+    "jwt_secret": "v455PZCISYukvQ0tUlGXA4vLFN4Ijq4lkQWjcZgInFzWj5fSliEy40XrlKoGUqJ5f3yIDvzmg8jg1UQEpXTvWm"
+  },
+  "d1_databases": [
+    {
+      "binding": "my_db",
+      "database_name": "my-db",
+      "database_id": "17ba315a-e524-4339-bc54-2b5527978fa1"
+    }
+  ]
+  // "compatibility_flags": [
+  //   "nodejs_compat"
+  // ],
+  // "vars": {
+  //   "MY_VAR": "my-variable"
+  // },
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "MY_KV_NAMESPACE",
+  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  //   }
+  // ],
+  // "r2_buckets": [
+  //   {
+  //     "binding": "MY_BUCKET",
+  //     "bucket_name": "my-bucket"
+  //   }
+  // ],
+  // "d1_databases": [
+  //   {
+  //     "binding": "MY_DB",
+  //     "database_name": "my-database",
+  //     "database_id": ""
+  //   }
+  // ],
+  // "ai": {
+  //   "binding": "AI"
+  // },
+  // "observability": {
+  //   "enabled": true,
+  //   "head_sampling_rate": 1
+  // }
+}
