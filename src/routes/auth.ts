@@ -1,86 +1,87 @@
 import { compare, hash } from "bcryptjs";
-import { AnyD1Database, drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import { users, sessions } from "../db/schema";
-import { eq } from "drizzle-orm";
-import { sign } from "hono/jwt";
 
 type Bindings = {
-    "my_db": AnyD1Database;
+    "my_db": D1Database;
     "jwt_secret": string;
 }
+
+type User = {
+    id: number;
+    username: string;
+    password: string;
+    is_payment_verified: string;
+    created_at: string;
+}
+
 const auth = new Hono<{ Bindings: Bindings }>()
 
 auth.post("/register", async (c) => {
     try {
-        let username, password;
-        try {
-            const body = await c.req.json();
-            username = body.username;
-            password = body.password;
-        } catch (e) {
-            return c.json({ error: "Invalid or missing JSON body" }, 400);
-        }
+        const body = await c.req.parseBody();
+        const username = body.username as string;
+        const password = body.password as string;
 
         if (!username || !password) {
             return c.json({ error: "Username and password are required" }, 400);
         }
 
-        const db = drizzle(c.env.my_db)
         const hashedPassword = await hash(password, 12);
+        const createdAt = new Date().toISOString();
 
-        await db.insert(users).values({
-            username,
-            password: hashedPassword,
-        })
-
-        return c.json({ message: "User registered successfully" }, 201)
+        await c.env.my_db.prepare(
+            "INSERT INTO users (username, password, created_at) VALUES (?, ?, ?)"
+        ).bind(username, hashedPassword, createdAt).run();
+        return c.redirect("/auth?tab=login&type=success&message=Account+forged+successfully.+Sign+in.", 302)        // return c.json({ message: "User registered successfully" }, 201)
     }
     catch (error: any) {
-        if (error.message?.includes("UNIQUE") || error.cause?.message?.includes("UNIQUE")) {
-            return c.json({ error: "Username already exists" }, 400)
+        if (error.message?.includes("UNIQUE")) {
+            return c.redirect("/auth?tab=register&type=error&message=Username+already+exists+in+the+void.", 302)
+            // return c.json({ error: "Username already exists" }, 400)
         }
         return c.json({ error: error.message || "Registration failed" }, 400)
     }
 })
+
 auth.post("/login", async (c) => {
     try {
-        let username, password;
-        try {
-            const body = await c.req.json();
-            username = body.username;
-            password = body.password;
-        } catch (e) {
-            return c.json({ error: "Invalid or missing JSON body" }, 400);
-        }
+        const body = await c.req.parseBody();
+        const username = body.username as string;
+        const password = body.password as string;
 
         if (!username || !password) {
-            return c.json({ error: "Username and password are required" }, 400);
+            return c.redirect("/auth?tab=login&type=error&message=Username+and+password+are+required.", 302)
         }
 
-        const db = drizzle(c.env.my_db)
-        const user = await db.select().from(users).where(eq(users.username, username)).get();
+        const user = await c.env.my_db.prepare(
+            "SELECT * FROM users WHERE username = ?"
+        ).bind(username).first<User>();
+
         if (!user) {
-            return c.json({ error: "User not found" }, 404)
+            return c.redirect("/auth?tab=login&type=error&message=User+not+found.", 302)
         }
+
         const validPassword = await compare(password, user.password);
         if (!validPassword) {
-            return c.json({ error: "Invalid password" }, 401)
+            return c.redirect("/auth?tab=login&type=error&message=Invalid+password.", 302)
         }
+
         const token = await hash(password + username + user.id, 12)
-        const session = await db.insert(sessions).values({
-            userId: user.id,
-            token: token,
-            expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(),
-        })
+        const expiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString();
+        const createdAt = new Date().toISOString();
+
+        const session = await c.env.my_db.prepare(
+            "INSERT INTO sessions (user_id, token, expires_at, created_at) VALUES (?, ?, ?, ?) RETURNING id"
+        ).bind(user.id, token, expiresAt, createdAt).first<{ id: number }>();
 
         return c.json({
             message: "Login successful",
-            user: user,
-            token: token,
+            user: { id: user.id, username: user.username },
+            token: session?.id + "|" + token,
         }, 200)
     } catch (error: any) {
         return c.json({ error: error.message || "Login failed" }, 400)
     }
 })
+
 export default auth

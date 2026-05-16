@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "my-app",
-  "main": "src/index.ts",
+  "main": "src/index.tsx",
   "compatibility_date": "2026-05-14",
   "vars": {
     // 512 bits  length jwt heheh
@@ -11,7 +11,8 @@
     {
       "binding": "my_db",
       "database_name": "my-db",
-      "database_id": "17ba315a-e524-4339-bc54-2b5527978fa1"
+      "database_id": "17ba315a-e524-4339-bc54-2b5527978fa1",
+      "migrations_dir": "./drizzle"
     }
   ]
   // "compatibility_flags": [

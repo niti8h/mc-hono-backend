@@ -1,1 +1,0 @@
-CREATE INDEX `token_idx` ON `sessions` (`token`);
