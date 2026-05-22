@@ -335,7 +335,75 @@ export const Layout = (props: LayoutProps) => {
     border-color: rgba(255, 0, 85, 0.3);
     color: #ff5085;
 }
-        </style>
+
+/* Responsive Media Queries */
+@media (max-width: 768px) {
+    .logo {
+        font-size: 2.5rem;
+        letter-spacing: -1.5px;
+    }
+    
+    .menu-logo {
+        font-size: 1.1rem;
+    }
+
+    .menubar-container {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 15px;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .nav-links a {
+        font-size: 0.85rem;
+    }
+
+    .container {
+        padding: 20px 15px;
+    }
+
+    header {
+        padding: 30px 0 40px;
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+        margin-bottom: 30px;
+    }
+
+    .info-box {
+        padding: 25px 15px;
+        border-radius: 20px;
+    }
+
+    .info-box div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    footer {
+        margin-top: 80px;
+        padding: 40px 15px;
+    }
+
+    .auth-container {
+        padding: 30px 20px;
+    }
+    
+    .tab-label {
+        font-size: 0.85rem;
+    }
+}
+</style>
 </head>
 <body>
 

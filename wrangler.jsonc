@@ -14,6 +14,12 @@
       "database_id": "17ba315a-e524-4339-bc54-2b5527978fa1",
       "migrations_dir": "./drizzle"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MY_BUCKET",
+      "bucket_name": "madarchod-images"
+    }
   ]
   // "compatibility_flags": [
   //   "nodejs_compat"

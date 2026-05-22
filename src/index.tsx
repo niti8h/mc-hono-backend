@@ -1,11 +1,50 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { Layout } from './components/Layout'
 import auth from './routes/auth'
+import listings from './routes/listings'
+import uploadRoute from './routes/upload'
+import usersRoute from './routes/users'
 
-const app = new Hono()
+type Bindings = {
+    my_db: D1Database;
+    MY_BUCKET: R2Bucket;
+}
 
-// 1. Home Page Route - Shows full rich content block
+const app = new Hono<{ Bindings: Bindings }>()
+
+app.use('*', cors({
+    origin: '*',
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization']
+}))
+
 app.route("/auth", auth)
+
+const AuthMiddleware = async (c: any, next: any) => {
+    const token = c.req.header("Authorization")?.split("Bearer ")[1];
+    if (!token) return c.json({ error: "Unauthorized" }, 401);
+    const parts = token.split("|");
+    if (parts.length !== 2) return c.json({ error: "Invalid token format" }, 401);
+    try {
+        const session = await c.env.my_db.prepare("SELECT * FROM sessions WHERE id = ?").bind(parts[0]).first();
+        if (!session || session.token !== parts[1] || new Date(session.expires_at as string) < new Date()) {
+            return c.json({ error: "Session expired" }, 401);
+        }
+        c.set("userId", (session.user_id as number).toString());
+        await next();
+    } catch (e) {
+        return c.json({ error: "Auth error" }, 500);
+    }
+}
+
+app.use('/api/v1/listings/*', AuthMiddleware)
+app.use('/api/v1/upload/*', AuthMiddleware)
+app.use('/api/v1/users/*', AuthMiddleware)
+app.route('/api/v1/listings', listings)
+app.route('/api/v1/upload', uploadRoute)
+app.route('/api/v1/users', usersRoute)
+
 
 app.get('/', (c) => {
     return c.html(
